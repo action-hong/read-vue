@@ -1,6 +1,4 @@
 import * as nodeOps from './node-ops'
-import { stat } from 'fs';
-import { start } from 'repl';
 
 function isUndef (s) {
   return s == null
@@ -91,6 +89,7 @@ function updateChildren(parentElm, oldCh, newCh, removeOnly) {
   while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
     if (isUndef(oldStartVnode)) {
       // 为什么这些dom可能是undef?
+      // 如果oldCh = [], 就是undef
       oldStartVnode = oldCh[++oldStartIdx]
     } else if (isUndef(oldEndVnode)) {
       oldEndVnode = oldCh[--oldEndIdx]
@@ -100,7 +99,7 @@ function updateChildren(parentElm, oldCh, newCh, removeOnly) {
       patchVnode(oldStartVnode, newStartVnode)
       oldStartVnode = oldCh[++oldStartIdx]
       newStartVnode = newCh[++newStartIdx]
-    } else if (sameVnode(oldEndVnode, oldEndVnode)) {
+    } else if (sameVnode(oldEndVnode, newEndVnode)) {
       // 同首节点相同
       patchVnode(oldEndVnode, newEndVnode)
       oldEndVnode = oldCh[--oldEndIdx]
@@ -144,7 +143,7 @@ function patchVnode(oldVnode, vnode, removeOnly) {
   }
 
   const elm = vnode.elm = oldVnode.elm
-  const oldCh = oldCh.children
+  const oldCh = oldVnode.children
   const ch = vnode.children
 
   if (isUndef(vnode.text)) {
