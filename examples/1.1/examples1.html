@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" href="./examples.css">
+</head>
+<body>
+  <div class="header">
+    <h1>ul渲染</h1>
+  </div>
+  <div class="vue-test-container">
+    <div id="example"></div>
+  </div>
+  <script src="../../dist/v1.1.js"></script>
+  <script>
+    let c = function (tag, children) {
+      if (children) {
+        for (let i = 0; i < children.length; i++) {
+          const element = children[i];
+          if (typeof element === 'string') {
+            children[i] = t(element)
+          }
+        }
+      }
+      return new VNode(tag, children, undefined, null)
+    }
+
+    let t = function (text) {
+      return new VNode(null, [], text, null)
+    }
+
+    let container = document.getElementById('example')
+    let oldVnode = new VNode(container.tagName, [], undefined, container)
+
+    let render = function (newVnode) {
+      patch(oldVnode, newVnode)
+      oldVnode = newVnode
+    }
+
+    render(c('ul', [
+      c('li', [ 'item 1' ]),
+      c('li', [ 'item 2' ]),
+      c('li', [ 'item 3' ])
+    ]))
+  </script>
+</body>
+</html>

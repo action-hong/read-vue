@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" href="./examples.css">
+</head>
+<body>
+  <div class="header">
+    <h1>每秒插入一行</h1>
+  </div>
+  <dic class="vue-test-container">
+    <div id="example"></div>
+  </dic>
+  <script src="../../dist/v1.1.js"></script>
+  <script>
+    var c = function(tag, children){
+      if (children){
+        for (var i = 0; i < children.length; ++i) {
+          var c = children[i]
+          if (typeof c == "string"){
+            children[i] = t(c)
+          }
+        }
+      }
+      return new VNode(tag, children, undefined, null)
+    }
+
+    var t = function(text){
+      return new VNode(null, [], text, null)
+    }
+
+    var container = document.getElementById("example")
+    var oldVnode = new VNode(container.tagName, [], undefined, container)
+
+    var render = function(newVnode){
+      patch(oldVnode, newVnode)
+      oldVnode = newVnode
+    }
+
+    var clk = 2
+    var arr = []
+    render(c('div', ['Line 1']))
+    setInterval(function () { 
+      let newArr = []
+      for (let i = 1; i <= clk; i++) {
+        newArr.push(c('p', ['line ' + i]))
+      }
+      render(c('div', newArr))
+      clk++
+    }, 1000)
+  </script>
+</body>
+</html>
