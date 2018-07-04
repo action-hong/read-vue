@@ -1,4 +1,5 @@
 import * as nodeOps from './node-ops'
+import VNode from './vnode'
 
 function isUndef (s) {
   return s == null
@@ -10,6 +11,10 @@ function isDef (s) {
 
 function sameVnode (v1, v2) {
   return v1.tag === v2.tag
+}
+
+function emptyNodeAt (elm) {
+  return new VNode(nodeOps.tagName(elm).toLowerCase(), [], undefined, elm)
 }
 
 function removeNode (el) {
@@ -172,10 +177,14 @@ function patchVnode (oldVnode, vnode, removeOnly) {
 
 export default function patch (oldVnode, vnode) {
   // let isInitialPatch = false
-
-  if (sameVnode(oldVnode, vnode)) {
+  // 是真实的dom, 不是vnode
+  const isRealElement = isDef(oldVnode.nodeType)
+  if (!isRealElement && sameVnode(oldVnode, vnode)) {
     patchVnode(oldVnode, vnode)
   } else {
+    if (isRealElement) {
+      oldVnode = emptyNodeAt(oldVnode)
+    }
     // 说明新旧两个节点的dom的根节点不一样
     // 那直接将新的dom替换旧的dom就行了
     const oldElm = oldVnode.elm

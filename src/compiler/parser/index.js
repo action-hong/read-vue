@@ -1,5 +1,6 @@
 import { parserHTML } from './html-parser'
-
+import { parseText } from './text-parser'
+import { warn } from 'core/util/debug'
 function makeAttrsMap (attrs) {
   const map = {}
   for (let i = 0; i < attrs.length; i++) {
@@ -21,7 +22,7 @@ const isPreTag = (tag) => tag === 'pre'
  * ast = { attrsList, attrsMap, children, parent, tag, type = 1} // 非文本节点
  * ast = { text, type = 3} 文本节点
  */
-export default function parse (template) {
+export function parse (template) {
   const stack = []
   let root // ast的根节点
   let currentParent // 当前节点的父亲节点
@@ -34,6 +35,7 @@ export default function parse (template) {
   }
 
   parserHTML(template, {
+    warn,
     start (tag, attrs, unary) {
       const element = {
         type: 1,
@@ -50,6 +52,10 @@ export default function parse (template) {
 
       if (!root) {
         root = element
+      } else if (!stack.length) {
+        warn(
+          `Component template should contain exacly one root element.`
+        )
       }
 
       if (currentParent) {
@@ -66,6 +72,7 @@ export default function parse (template) {
       }
     },
     end () {
+      console.log('回调标签读完')
       const element = stack[stack.length - 1]
       const lastNode = element.children[element.children.length - 1]
       if (lastNode && lastNode.type === 3 && lastNode.text === ' ' && !inPre) {
@@ -79,6 +86,12 @@ export default function parse (template) {
     },
     chars (text) {
       if (!currentParent) {
+        if (text === template) {
+          // 传入的template不应该是纯文本节点
+          warn(
+            'Component template reuqires a root element, rather than just text'
+          )
+        }
         return
       }
       const children = currentParent.children
@@ -86,11 +99,20 @@ export default function parse (template) {
         ? decode(text)
         : (children.length ? ' ' : '') // 如果文本节点为多个空格，同时所在的父亲节点含有其他孩子节点，那么要生成一个单空格的文本节点
       if (text) {
-        // 文本节点
-        children.push({
-          text,
-          type: 3
-        })
+        let expression
+        if (text !== ' ' && (expression = parseText(text))) {
+          children.push({
+            type: 2,
+            expression,
+            text
+          })
+        } else {
+          // 文本节点
+          children.push({
+            text,
+            type: 3
+          })
+        }
       }
     }
   })
