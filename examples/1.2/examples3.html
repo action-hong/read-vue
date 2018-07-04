@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" href="./examples.css">
+</head>
+
+<body>
+  <div class="header">
+    <h1>每行一秒插入一行</h1>
+  </div>
+  <div class="vue-test-container">
+    <div id="example"></div>
+  </div>
+
+  <script src="../../dist/v1.2.js"></script>
+  <script>
+    var compile = function (html) {
+      return generate(parse(html))
+    }
+
+    var container = document.getElementById("example")
+    var oldVnode = new VNode(container.tagName, [], undefined, container)
+
+    var render = function (newVnode) {
+      patch(oldVnode, newVnode)
+      oldVnode = newVnode
+    }
+
+    var clk = 2
+    var arr = []
+
+    render(
+      compile(
+        `<div>
+          <p>Line 1</p>
+        </div>`
+      )
+    )
+
+    setInterval(function () {
+      var html = [];
+      for (var i = 1; i <= clk; ++i) {
+        html.push(`<p>Line ${i}</p>`)
+      }
+      render(
+        compile(
+          `<div>
+          ${html.join("")}
+        </div>`
+        )
+      )
+      clk++
+    }, 1000)
+
+
+
+  </script>
+</body>
+
+</html>

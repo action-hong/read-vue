@@ -1,13 +1,13 @@
 export default class VNode {
   constructor (
-    tag,          // 标签名
-    children,     // 子节点 [VNode, VNode, ...]
-    text,         // 文本节点
-    elm           // 对应的真实dom对象
+    tag, // 标签名
+    children, // 子节点 [VNode, VNode, ...]
+    text, // 文本节点
+    elm // 对应的真实dom对象
   ) {
-    this.tag      = tag
+    this.tag = tag
     this.children = children
-    this.text     = text
-    this.elm      = elm
+    this.text = text
+    this.elm = elm
   }
 }
