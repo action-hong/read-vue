@@ -291,7 +291,7 @@ export function parserHTML (html, options) {
       // 从堆栈中找到和当前结束标签匹配的其实标签
       // 不是找最顶上的那个吗 ?
       for (pos = stack.length - 1; pos >= 0; pos--) {
-        if (stack[pos].lowerCasedTag === lowerCaseTagName) {
+        if (stack[pos].lowerCaseTag === lowerCaseTagName) {
           break
         }
       }

@@ -11,3 +11,22 @@ export default class VNode {
     this.elm = elm
   }
 }
+
+export function createElementVNode (tag, children) {
+  if (!tag) {
+    return createEmptyVNode()
+  }
+
+  let vnode = new VNode(tag, children, undefined, undefined)
+  return vnode
+}
+
+export const createEmptyVNode = () => {
+  const node = new VNode()
+  node.text = ''
+  return node
+}
+
+export function createTextVNode (val) {
+  return new VNode(undefined, undefined, String(val))
+}
