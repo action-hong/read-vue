@@ -8,11 +8,11 @@ function isDef (s) {
   return s != null
 }
 
-function sameVnode(v1, v2) {
+function sameVnode (v1, v2) {
   return v1.tag === v2.tag
 }
 
-function removeNode(el) {
+function removeNode (el) {
   const parent = nodeOps.parentNode(el)
   if (parent) {
     nodeOps.removeChild(parent, el)
@@ -37,7 +37,7 @@ function createElm (vnode, parentElm, refElm) {
   }
 }
 
-function insert(parent, elm, ref) {
+function insert (parent, elm, ref) {
   if (parent) {
     if (ref) {
       nodeOps.insertBefore(parent, elm, ref)
@@ -47,7 +47,7 @@ function insert(parent, elm, ref) {
   }
 }
 
-function createChildren(vnode, children) {
+function createChildren (vnode, children) {
   if (Array.isArray(children)) {
     for (let i = 0; i < children.length; i++) {
       createElm(children[i], vnode.elm, null)
@@ -55,13 +55,13 @@ function createChildren(vnode, children) {
   }
 }
 
-function addVnodes(parentElm, refElm, vnodes, startIdx, endIdx) {
+function addVnodes (parentElm, refElm, vnodes, startIdx, endIdx) {
   for (; startIdx <= endIdx; startIdx++) {
     createElm(vnodes[startIdx], parentElm, refElm)
   }
 }
 
-function removeVnodes(parentElm, vnodes, startIdx, endIdx) {
+function removeVnodes (parentElm, vnodes, startIdx, endIdx) {
   for (; startIdx <= endIdx; startIdx++) {
     const ch = vnodes[startIdx]
     if (isDef(ch)) {
@@ -73,18 +73,18 @@ function removeVnodes(parentElm, vnodes, startIdx, endIdx) {
 }
 
 // 比较新旧vnode, 更新视图
-function updateChildren(parentElm, oldCh, newCh, removeOnly) {
-  let oldStartIdx   = 0
-  let newStartIdx   = 0
-  let oldEndIdx     = oldCh.length - 1
-  let newEndIdx     = newCh.length - 1
+function updateChildren (parentElm, oldCh, newCh, removeOnly) {
+  let oldStartIdx = 0
+  let newStartIdx = 0
+  let oldEndIdx = oldCh.length - 1
+  let newEndIdx = newCh.length - 1
   let oldStartVnode = oldCh[0]
   let newStartVnode = newCh[0]
-  let oldEndVnode   = oldCh[oldEndIdx]
-  let newEndVnode   = newCh[newEndIdx]
-  let oldKeyToIdx, idxInOld, elmToMove, refElm
+  let oldEndVnode = oldCh[oldEndIdx]
+  let newEndVnode = newCh[newEndIdx]
+  let refElm
 
-  const canMove     = !removeOnly
+  const canMove = !removeOnly
 
   while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
     if (isUndef(oldStartVnode)) {
@@ -137,7 +137,7 @@ function updateChildren(parentElm, oldCh, newCh, removeOnly) {
   }
 }
 
-function patchVnode(oldVnode, vnode, removeOnly) {
+function patchVnode (oldVnode, vnode, removeOnly) {
   if (oldVnode === vnode) {
     return
   }
@@ -171,7 +171,7 @@ function patchVnode(oldVnode, vnode, removeOnly) {
 }
 
 export default function patch (oldVnode, vnode) {
-  let isInitialPatch = false
+  // let isInitialPatch = false
 
   if (sameVnode(oldVnode, vnode)) {
     patchVnode(oldVnode, vnode)
