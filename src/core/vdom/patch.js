@@ -1,5 +1,9 @@
 import * as nodeOps from './node-ops'
 import VNode from './vnode'
+import { updateAttrs } from './attrs'
+import { updateDOMProps } from './dom-props'
+
+export const emptyNode = new VNode('', {}, [])
 
 function isUndef (s) {
   return s == null
@@ -14,7 +18,7 @@ function sameVnode (v1, v2) {
 }
 
 function emptyNodeAt (elm) {
-  return new VNode(nodeOps.tagName(elm).toLowerCase(), [], undefined, elm)
+  return new VNode(nodeOps.tagName(elm).toLowerCase(), {}, [], undefined, elm)
 }
 
 function removeNode (el) {
@@ -33,6 +37,11 @@ function createElm (vnode, parentElm, refElm) {
 
     // 生成该dom的子节点(不断递归)
     createChildren(vnode, children)
+
+    // 属性
+    updateAttrs(emptyNode, vnode)
+    updateDOMProps(emptyNode, vnode)
+
     // 将生成的dom插入到页面去
     insert(parentElm, vnode.elm, refElm)
   } else {
@@ -147,9 +156,17 @@ function patchVnode (oldVnode, vnode, removeOnly) {
     return
   }
 
+  const data = vnode.data
+  const hasData = isDef(data)
   const elm = vnode.elm = oldVnode.elm
   const oldCh = oldVnode.children
   const ch = vnode.children
+
+  // 更新属性
+  if (hasData) {
+    updateAttrs(oldVnode, vnode)
+    updateDOMProps(oldVnode, vnode)
+  }
 
   if (isUndef(vnode.text)) {
     // 不是文字节点

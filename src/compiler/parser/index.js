@@ -1,6 +1,7 @@
 import { parserHTML } from './html-parser'
 import { parseText } from './text-parser'
 import { warn } from 'core/util/debug'
+import { mustUseProp } from 'core/vdom/attrs'
 function makeAttrsMap (attrs) {
   const map = {}
   for (let i = 0; i < attrs.length; i++) {
@@ -45,6 +46,10 @@ export function parse (template) {
         parent: currentParent,
         children: []
       }
+
+      element.plain = !element.key && !attrs.length
+      // 处理节点的属性
+      processAttrs(element)
 
       if (isPreTag(element.tag)) {
         inPre = true
@@ -117,4 +122,43 @@ export function parse (template) {
     }
   })
   return root
+}
+
+export const dirRE = /^v-|^:/
+const bindRE = /^:|^v-bind:/
+
+function processAttrs (el) {
+  const list = el.attrsList
+  let i, l, name, value
+  for (i = 0, l = list.length; i < l; i++) {
+    name = list[i].name
+    value = list[i].value
+
+    if (dirRE.test(name)) {
+      // mark element as dynamic
+      el.hasBindings = true
+
+      if (bindRE.test(name)) {
+        // :xxx or v-bind:xxx
+        name = name.replace(bindRE, '')
+
+        if (mustUseProp(el.tag, el.attrsMap.type, name)) {
+          addProp(el, name, value)
+        } else {
+          addAttr(el, name, value)
+        }
+      }
+    } else {
+      // 静态字符串
+      addAttr(el, name, JSON.stringify(value))
+    }
+  }
+}
+
+function addProp (el, name, value) {
+  (el.props || (el.props = [])).push({name, value})
+}
+
+function addAttr (el, name, value) {
+  (el.attrs || (el.attrs = [])).push({name, value})
 }

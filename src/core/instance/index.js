@@ -60,7 +60,7 @@ Vue.prototype._update = function () {
   patch(prevVnode, vnode)
 }
 
-Vue.prototype.setDate = function (data) {
+Vue.prototype.setData = function (data) {
   this._initData(data)
   this._update()
 }
