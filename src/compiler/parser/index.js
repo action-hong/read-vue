@@ -48,7 +48,9 @@ export function parse (template) {
       }
 
       element.plain = !element.key && !attrs.length
-      // 处理节点的属性
+
+      // 处理if 节点
+      processIf(element)
       processAttrs(element)
 
       if (isPreTag(element.tag)) {
@@ -58,13 +60,27 @@ export function parse (template) {
       if (!root) {
         root = element
       } else if (!stack.length) {
-        warn(
-          `Component template should contain exacly one root element.`
-        )
+        if (root.if && (element.elseif || element.else)) {
+          addIfCondition(root, {
+            exp: element.elseif,
+            block: element
+          })
+        } else {
+          warn(
+            `Component template should contain exactly one root element. ` +
+            `If you are using v-if on multiple elements, ` +
+            `use v-else-if to chain them instead.`
+          )
+        }
       }
 
       if (currentParent) {
-        currentParent.children.push(element)
+        if (element.elseif || element.else) {
+          processIfConditions(element, currentParent)
+        } else {
+          currentParent.children.push(element)
+          element.parent = currentParent
+        }
       }
 
       if (!unary) {
@@ -124,6 +140,67 @@ export function parse (template) {
   return root
 }
 
+function processIf (el) {
+  const exp = getAndRemoveAttr(el, 'v-if')
+  if (exp) {
+    el.if = exp
+    addIfCondition(el, {
+      exp,
+      block: el
+    })
+  } else {
+    if (getAndRemoveAttr(el, 'v-else') != null) {
+      el.else = true
+    }
+    const elseif = getAndRemoveAttr(el, 'v-else-if')
+    if (elseif) {
+      el.elseif = elseif
+    }
+  }
+}
+
+// v-else-if v-else 要找到上一个if节点
+function processIfConditions (el, parent) {
+  const prev = findPrevElement(parent.children)
+  if (prev && prev.if) {
+    // 上一个节点是if节点, 把表达式插入到该节点的ifCondition队列中
+    addIfCondition(prev, {
+      exp: el.elseif,
+      block: el
+    })
+  } else { // 找不到上一个if节点, 需要报错
+    warn(
+      `v-${el.elseif ? ('else-if="' + el.elseif + '"') : 'else'} ` +
+      `used on element <${el.tag}> without corresponding v-if.`
+    )
+  }
+}
+
+function findPrevElement (children) {
+  let i = children.length
+  while (i--) {
+    if (children[i].type === 1) {
+      return children[i]
+    } else {
+      if (children[i].text !== ' ') {
+        // 在if和else几点中间不要有其他非空白的文本节点
+        warn(
+          `text "${children[i].text.trim()}" between v-if and v-else(-if) ` +
+          `will be ignored.`
+        )
+      }
+      children.pop()
+    }
+  }
+}
+
+function addIfCondition (el, condition) {
+  if (!el.ifConditions) {
+    el.ifConditions = []
+  }
+  el.ifConditions.push(condition)
+}
+
 export const dirRE = /^v-|^:/
 const bindRE = /^:|^v-bind:/
 
@@ -161,4 +238,18 @@ function addProp (el, name, value) {
 
 function addAttr (el, name, value) {
   (el.attrs || (el.attrs = [])).push({name, value})
+}
+
+function getAndRemoveAttr (el, name) {
+  let val
+  if ((val = el.attrsMap[name]) != null) {
+    const list = el.attrsList
+    for (let i = 0, l = list.length; i < l; i++) {
+      if (list[i].name === name) {
+        list.splice(i, 1)
+        break
+      }
+    }
+  }
+  return val
 }

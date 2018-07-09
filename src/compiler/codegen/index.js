@@ -9,15 +9,42 @@ export function generate (ast) {
 }
 
 function genElement (el) {
-  let code
-  const children = genChildren(el)
-  const data = genData(el)
+  if (el.if && !el.ifProcessed) {
+    return genIf(el)
+  } else {
+    let code
+    const children = genChildren(el)
+    const data = genData(el)
+    code = `_c('${el.tag}'${
+      `,${data}`
+    }${children ? `,${children}` : ''
+    })`
+    return code
+  }
+}
 
-  code = `_c('${el.tag}'${
-    `,${data}`
-  }${children ? `,${children}` : ''
-  })`
-  return code
+function genIf (el) {
+  // 标记已经处理过的当前if, 避免递归死循环
+  el.ifProcessed = true
+  return genIfConditions(el.ifConditions.slice())
+}
+
+function genIfConditions (conditions) {
+  if (!conditions.length) {
+    return `_e()`
+  }
+
+  const condition = conditions.shift()
+  if (condition.exp) {
+    return `(${condition.exp})?${genTernaryExp(condition.block)}:${genIfConditions(conditions)}`
+  } else {
+    // v-else
+    return `${genTernaryExp(condition.block)}`
+  }
+
+  function genTernaryExp (el) {
+    return genElement(el)
+  }
 }
 
 function genData (el) {
