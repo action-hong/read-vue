@@ -2,7 +2,7 @@ import patch from 'core/vdom/patch'
 import compile from 'compiler/index'
 // import generate from 'compiler/codegen/index'
 
-import { createTextVNode, createElementVNode, createEmptyVNode } from '../vdom/vnode'
+import { createTextVNode, createElementVNode, createEmptyVNode, renderList } from '../vdom/vnode'
 
 import {
   _toString,
@@ -23,6 +23,7 @@ Vue.prototype._c = createElementVNode
 Vue.prototype._v = createTextVNode
 Vue.prototype._s = _toString
 Vue.prototype._e = createEmptyVNode
+Vue.prototype._l = renderList
 
 Vue.prototype._init = function (options) {
   const vm = this

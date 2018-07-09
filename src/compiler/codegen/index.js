@@ -9,11 +9,17 @@ export function generate (ast) {
 }
 
 function genElement (el) {
-  if (el.if && !el.ifProcessed) {
+  if (el.for && !el.forProcessed) {
+    // 为了 v-for 和 v-if 的优先级
+    // <ul v-for="(item, index) in list" v-if = "index === 0">
+    // v-if 的语句能引用 v-for 里面声明的变量
+    return genFor(el)
+  } else if (el.if && !el.ifProcessed) {
     return genIf(el)
   } else {
     let code
-    const children = genChildren(el)
+    // 避免传入 underfine 的children
+    const children = genChildren(el) || '[]'
     const data = genData(el)
     code = `_c('${el.tag}'${
       `,${data}`
@@ -21,6 +27,23 @@ function genElement (el) {
     })`
     return code
   }
+}
+
+function genFor (el) {
+  const exp = el.for
+  const alias = el.alias
+  const iteraotr1 = el.iteraotr1 ? `,${el.iteraotr1}` : ''
+  const iteraotr2 = el.iteraotr2 ? `,${el.iteraotr2}` : ''
+
+  el.forProcessed = true
+  // <ul v-for="(item, index) in list" />
+  // _l((list), function (item, index) {
+  //    return _c('ul', {}, ..)  
+  // })
+  return `_l((${exp}),` +
+    `function(${alias}${iteraotr1}${iteraotr2}){` +
+      `return ${genElement(el)}` +
+    `})`
 }
 
 function genIf (el) {
