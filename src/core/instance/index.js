@@ -3,8 +3,8 @@ import compile from 'compiler/index'
 // import generate from 'compiler/codegen/index'
 
 import { createTextVNode, createElementVNode, createEmptyVNode, renderList } from '../vdom/vnode'
-import { observe } from '../observer/index'
-
+import { observe, set, del } from '../observer/index'
+import Watcher from '../observer/watcher'
 import {
   _toString,
   warn,
@@ -30,6 +30,9 @@ Vue.prototype._l = renderList
 Vue.prototype._init = function (options) {
   const vm = this
   const template = options.template
+
+  vm._isVue = true
+  vm._watchers = []
 
   if (options.data) {
     this._initData()
@@ -77,15 +80,26 @@ Vue.prototype._update = function () {
   patch(prevVnode, vnode)
 }
 
-Vue.prototype.setData = function (data) {
-  this._initData(data)
-  this._update()
-}
+// Vue.prototype.setData = function (data) {
+//   this._initData(data)
+//   this._update()
+// }
 
 Vue.prototype.$mount = function (el) {
   const vm = this
   vm._vnode = document.getElementById(el)
-  this._update()
+
+  let updateComponent = () => {
+    vm._update()
+  }
+
+  // vm作为 root 开始收集依赖
+  // 通过vm._update()调用, 开始收集整个vm组件内的依赖
+  vm._watcher = new Watcher(vm, updateComponent, noop)
+
+  // 之后只要有 vm.a = "xx" 的set动作
+  // 就会触发到整条以依赖链的watcher, 最后触发update
+  return vm
 }
 
 const sharedPropertyDefinition = {
@@ -129,3 +143,23 @@ function defineComputed (target, key, userDef) {
   }
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
+
+Vue.prototype.$set = set
+Vue.prototype.$delete = del
+
+Vue.prototype.$watch = function (expOrFn, cb, options) {
+  const vm = this
+  options = options || {}
+  options.user = true // 标记用户主动监听的Wathcer
+  const watcher = new Watcher(vm, expOrFn, cb, options)
+  if (options.immediate) {
+    cb.call(vm, watcher.value)
+  }
+  // 返回取消watch的接口
+  return function unwatchFn () {
+    watcher.teardown()
+  }
+}
+
+Vue.set = set
+Vue.delete = del
