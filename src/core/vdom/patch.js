@@ -2,7 +2,7 @@ import * as nodeOps from './node-ops'
 import VNode from './vnode'
 import { updateAttrs } from './attrs'
 import { updateDOMProps } from './dom-props'
-
+import { warn } from 'core/util/debug'
 export const emptyNode = new VNode('', {}, [])
 
 function isUndef (s) {
@@ -14,7 +14,21 @@ function isDef (s) {
 }
 
 function sameVnode (v1, v2) {
-  return v1.tag === v2.tag
+  return (
+    v1.key === v2.key &&
+    v1.tag === v2.tag &&
+    !v1.data === !v2.data
+  )
+}
+
+function createKeyToOldIdx (children, beginIdx, endIdx) {
+  let i, key
+  const map = {}
+  for (i = beginIdx; i <= endIdx; ++i) {
+    key = children[i].key
+    if (isDef(key)) map[key] = i
+  }
+  return map
 }
 
 function emptyNodeAt (elm) {
@@ -96,7 +110,7 @@ function updateChildren (parentElm, oldCh, newCh, removeOnly) {
   let newStartVnode = newCh[0]
   let oldEndVnode = oldCh[oldEndIdx]
   let newEndVnode = newCh[newEndIdx]
-  let refElm
+  let oldKeyToIdx, idxInOld, elmToMove, refElm
 
   const canMove = !removeOnly
 
@@ -132,8 +146,37 @@ function updateChildren (parentElm, oldCh, newCh, removeOnly) {
       newStartVnode = newCh[++newStartIdx]
     } else {
       // 新增的节点, 创建就完事了
-      createElm(newStartVnode, parentElm, oldStartVnode.elm)
-      newStartVnode = newCh[++newStartIdx]
+      // 头尾都没有相同的节点, 就去创建新dom, 显然有点耗性能
+      // 有可能相同的节点在中间某一处, 故通过key去找旧的dom来复用, 减少不必要的增删dom操作
+      if (isUndef(oldKeyToIdx)) oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx)
+      idxInOld = isDef(newStartVnode.key) ? oldKeyToIdx[newStartVnode.key] : null
+      if (isUndef(idxInOld)) {
+        // 当前元素在就的VNode 找不到, 故创建dom(之前的逻辑)
+        createElm(newStartVnode, parentElm, oldStartVnode.elm)
+        newStartVnode = newCh[++newStartIdx]
+      } else {
+        elmToMove = oldCh[idxInOld] // 找到同key
+        if (!elmToMove) {
+          // // TODO: 为什么重复key就会进这个分支?
+          // 因为第一个key对应的旧dom, 用完后就置为 undefined
+          // 第二个相同的key去找这个dom的话, 只会找到 undefined的
+          // 故会进这个分支
+          warn(
+            'It seems there are duplicate keys that is causing an update error. ' +
+            'Make sure each v-for item has a unique key.'
+          )
+        }
+        if (sameVnode(elmToMove, newStartVnode)) {
+          patchVnode(elmToMove, newStartVnode)
+          oldCh[idxInOld] = undefined
+          canMove && nodeOps.insertBefore(parentElm, newStartVnode.elm, oldStartVnode.elm)
+          newStartVnode = newCh[++newStartIdx]
+        } else {
+          // 虽然是同一个key, 但标签不一致, 不能复用
+          createElm(newStartVnode, parentElm, oldStartVnode)
+          newStartVnode = newCh[++newStartIdx]
+        }
+      }
     }
   }
 
