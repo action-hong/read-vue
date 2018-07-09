@@ -25,6 +25,8 @@ function genElement (el) {
 
 function genIf (el) {
   // 标记已经处理过的当前if, 避免递归死循环
+  // 为什么会死循环呀, 不是一直往下递归吗
+  // 因为在生成第一个 v-if 的 el时, 会调用两次 genElement, 第一次是用来 genIf, 第二次是用来生成 节点信息的, 注释掉下列代码 运行一下就知道了
   el.ifProcessed = true
   return genIfConditions(el.ifConditions.slice())
 }
