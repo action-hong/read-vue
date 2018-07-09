@@ -67,8 +67,8 @@ Vue.prototype._initData = function () {
       // 把vm.abc 代理到 vm._data.abc
       proxy(vm, '_data', keys[i])
     }
-    observe(data, this)
   }
+  observe(data, this)
 }
 
 Vue.prototype._update = function () {

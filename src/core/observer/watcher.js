@@ -1,8 +1,8 @@
-import Dep, { pushTarget, popTarget } from './dep'
+import { pushTarget, popTarget } from './dep'
 
 import {
   warn,
-  remove,
+  // remove,
   isObject,
   parsePath,
   _Set as Set
