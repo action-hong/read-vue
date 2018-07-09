@@ -22,6 +22,10 @@ export function hasOwn (obj, key) {
   return hasOwnProperty.call(obj, key)
 }
 
+export function isObject (obj) {
+  return obj !== null && typeof obj === 'object'
+}
+
 const toString = Object.prototype.toString
 const OBJECT_STRING = '[object Object]'
 export function isPlainObject (obj) {
